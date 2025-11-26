@@ -22,4 +22,12 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false
   },
+    "exclude": [
+    "frontend",
+    "frontend/**/*",
+    "node_modules",
+    "dist",
+    "coverage",
+    "test"
+  ]
 }
