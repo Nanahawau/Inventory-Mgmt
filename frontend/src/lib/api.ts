@@ -47,20 +47,20 @@ async function http<T = any>(path: string, init?: HttpInit): Promise<T> {
     data = undefined;
   }
 
-  // If status is 401 (unauthorized), or the response contains explicit "token" or "expired" errors:
-  if (res.status === 401 || (isJson && data && typeof data === 'object' && /token|expired|invalid/i.test(JSON.stringify(data)))) {
-    try {
-      // Clear token and notify subscribers
-      authClient.clearToken();
-      // redirect to login page
-      if (typeof window !== 'undefined') {
-        window.location.href = '/';
-      }
-    } catch {}
-    // Throw an error so calling code can optionally handle it
-    const msg = isJson && data && (data.message || data.error) ? (data.message || data.error) : 'Unauthorized';
-    throw new Error(msg);
+ if (res.status === 401) {
+  // Clear local auth state but DO NOT redirect here.
+  // Let the caller handle navigation (LoginForm or a central error boundary).
+  try {
+    authClient.clear();
+  } catch (e) {
+    // ignore storage/clear errors
+    console.warn('[api] error clearing auth state', e);
   }
+
+  // Compose an error message and throw so the caller (LoginForm) can handle it.
+  const msg = isJson && data && (data.message || data.error) ? (data.message || data.error) : 'Unauthorized';
+  throw new Error(msg);
+}
 
   if (!res.ok) {
     const msg =

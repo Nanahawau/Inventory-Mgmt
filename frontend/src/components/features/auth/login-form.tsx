@@ -9,7 +9,7 @@ export default function LoginForm() {
   const router = useRouter();
   const { setToken } = useAuth();
 
-  const [email, setEmail] = useState('admin@gmail.com');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -18,35 +18,30 @@ export default function LoginForm() {
     e.preventDefault();
     setError(null);
     setLoading(true);
+
     try {
-      // Call backend via api helper
       const res = await api.auth.login(email, password);
 
-      // Try common token locations and envelopes:
-      // - { access_token: '...' }
-      // - { token: '...' }
-      // - { data: { access_token: '...' } }
-      // - { data: { token: '...' } }
+      // Keep a single diagnostic log for the API response
+      console.debug('[login] response', res);
+
       const token =
         (res && (res as any).access_token) ||
         (res && (res as any).token) ||
         (res && (res as any).data && ((res as any).data.access_token || (res as any).data.token)) ||
         null;
 
-      console.log('login response:', res, 'extracted token:', token);
-
       if (!token) {
-        // Surface clear error if backend should return token but didn't
-        throw new Error('Login succeeded but no access token was returned.');
+        throw new Error('Login did not return an access token.');
       }
 
-      // Persist token via hook (authClient will schedule expiration, subscribers updated)
+      // Persist token via auth hook
       setToken(token);
 
-      // Redirect into the app (replace keeps history clean)
+      // Navigate into the app
       router.replace('/dashboard');
     } catch (err: any) {
-      console.error('Login error', err);
+      console.error('[login] error', err);
       setError(err?.message || 'Login failed');
     } finally {
       setLoading(false);
@@ -79,7 +74,7 @@ export default function LoginForm() {
         />
       </div>
 
-      {error ? <div className="text-sm text-red-600">{error}</div> : null}
+      {error ? <div className="text-sm text-red-600 whitespace-pre-wrap">{error}</div> : null}
 
       <div>
         <button

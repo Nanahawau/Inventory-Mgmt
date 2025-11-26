@@ -3,18 +3,17 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-
-type NavItem = { href: string; label: string; showCount?: boolean };
+import api from '@/lib/api';
 
 export default function Sidebar() {
   const pathname = usePathname() || '/dashboard';
-  const items: NavItem[] = [
+  const items = [
     { href: '/dashboard', label: 'Overview' },
     { href: '/dashboard/stores', label: 'Stores', showCount: true },
     { href: '/dashboard/products', label: 'Products' },
-  //   { href: '/dashboard/skus', label: 'SKUs' },
-  //   { href: '/reports', label: 'Reports' },
-  //   { href: '/settings', label: 'Settings' },
+    // { href: '/dashboard/skus', label: 'SKUs' },
+    // { href: '/reports', label: 'Reports' },
+    // { href: '/settings', label: 'Settings' },
   ];
 
   const [storesCount, setStoresCount] = useState<number | null>(null);
@@ -23,22 +22,18 @@ export default function Sidebar() {
   useEffect(() => {
     let cancelled = false;
     async function fetchCount() {
+      setLoadingCount(true);
       try {
-        setLoadingCount(true);
-        const res = await fetch('/api/stores?meta=true', { cache: 'no-store' });
-        if (!res.ok) throw new Error('Failed to load stores count');
-        const json = await res.json();
-        // Expecting { count: number } when ?meta=true
-        if (!cancelled) setStoresCount(typeof json.count === 'number' ? json.count : null);
-      } catch (err) {
+        // Prefer api.stores.count() if available
+        const count = await api.stores.count?.();
+        if (!cancelled) setStoresCount(typeof count === 'number' ? count : null);
+      } catch {
         if (!cancelled) setStoresCount(null);
       } finally {
         if (!cancelled) setLoadingCount(false);
       }
     }
-
     fetchCount();
-    // Refresh counts occasionally (optional)
     const id = setInterval(fetchCount, 60_000);
     return () => {
       cancelled = true;
@@ -49,7 +44,6 @@ export default function Sidebar() {
   return (
     <aside aria-label="Primary" className="w-64 border-r border-slate-200 bg-white min-h-screen p-4">
       <div className="mb-6 text-lg font-semibold">InventoryMgmt</div>
-
       <nav className="flex flex-col space-y-1" role="navigation" aria-label="Dashboard">
         {items.map((it) => {
           const active = pathname === it.href || pathname?.startsWith(it.href + '/');
@@ -75,7 +69,6 @@ export default function Sidebar() {
           );
         })}
       </nav>
-
       <div className="mt-6 text-xs text-slate-500">v1 • Lightweight sidebar</div>
     </aside>
   );

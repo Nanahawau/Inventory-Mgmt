@@ -4,16 +4,11 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import api from '@/lib/api';
 
-type Store = {
-  id: number | string;
-  name: string;
-  location?: string;
-  createdAt?: string;
-};
+type Store = { id: number | string; name: string; location?: string; createdAt?: string };
 
 export default function StoresPage() {
   const [stores, setStores] = useState<Store[] | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -22,8 +17,8 @@ export default function StoresPage() {
       setLoading(true);
       setError(null);
       try {
-        const result = await api.stores.list();
-        const items = Array.isArray(result) ? result : (result.items ?? result);
+        const res = await api.stores.list();
+        const items = Array.isArray(res) ? res : res?.items ?? res;
         if (!cancelled) setStores(items);
       } catch (err: any) {
         if (!cancelled) setError(err.message || 'Failed to load stores');
