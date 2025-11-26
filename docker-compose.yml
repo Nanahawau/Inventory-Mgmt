@@ -58,17 +58,17 @@ services:
     ports:
       - "3000:3000"
 
-  frontend:
-    build: ./frontend
-    container_name: inventory-frontend
-    depends_on:
-      api:
-        condition: service_started
-    environment:
-      NEXT_PUBLIC_API_URL: http://api:3000
-      PORT: 3001
-    ports:
-      - "3001:3001"
+  # frontend:
+  #   build: ./frontend
+  #   container_name: inventory-frontend
+  #   depends_on:
+  #     api:
+  #       condition: service_started
+  #   environment:
+  #     NEXT_PUBLIC_API_URL: http://api:3000
+  #     PORT: 3001
+  #   ports:
+  #     - "3001:3001"
 
 volumes:
   db_data:

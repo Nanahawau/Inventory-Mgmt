@@ -1,36 +1,50 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+console.log('[http] INIT NEXT_PUBLIC_API_URL =', API_URL);
 
 type HttpInit = Omit<RequestInit, 'body'> & { token?: string; body?: any };
 
-async function httpRaw(path: string, init?: HttpInit) {
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(init?.headers as any),
-  };
-  if (init?.token) headers.Authorization = `Bearer ${init.token}`;
-
-  const res = await fetch(`${API_URL}${path}`, {
-    ...init,
-    headers,
-    body: init?.body ? JSON.stringify(init.body) : undefined,
-    cache: 'no-store',
-  });
-
-  const isJson = res.headers.get('content-type')?.includes('application/json');
-  const payload = isJson ? await res.json() : await res.text();
-  if (!res.ok) {
-    throw new Error(typeof payload === 'string' ? payload : (payload as any)?.message || 'Request failed');
-  }
-  return payload;
+function safeJsonStringify(value: any) {
+  try { return JSON.stringify(value); } catch { return '[unserializable]'; }
 }
 
-// Unwrap interceptor shape { status, data } automatically
+function extractErrorMessage(payload: any): string {
+  if (payload == null) return 'Request failed';
+  if (typeof payload === 'string') return payload;
+  const msg = (payload as any)?.message;
+  const errs = (payload as any)?.errors;
+  if (Array.isArray(msg) && msg.length) return msg.join(', ');
+  if (typeof msg === 'string' && msg) return msg;
+  if (Array.isArray(errs) && errs.length) return errs.join(', ');
+  if (typeof (payload as any)?.error === 'string' && (payload as any)?.error) return (payload as any).error;
+  return 'Request failed';
+}
+
 async function http<T>(path: string, init?: HttpInit): Promise<T> {
-  const payload = await httpRaw(path, init);
-  if (payload && typeof payload === 'object' && 'status' in payload && 'data' in payload) {
-    return (payload as any).data as T;
+  const headers: Record<string, string> = { 'Content-Type': 'application/json', ...(init?.headers as any) };
+  if (init?.token) headers.Authorization = `Bearer ${init.token}`;
+
+  const url = `${API_URL}${path}`;
+  const res = await fetch(url, { ...init, headers, body: init?.body ? JSON.stringify(init.body) : undefined, cache: 'no-store' });
+
+  const contentType = res.headers.get('content-type') || '';
+  const isJson = contentType.includes('application/json');
+  const payload = isJson ? await res.json() : await res.text();
+
+  console.log('[http] url:', url, 'status:', res.status, 'payload:', safeJsonStringify(payload));
+
+  if (!res.ok) {
+    const message = extractErrorMessage(payload);
+    console.error('[http] error:', message);
+    throw new Error(message);
   }
-  return payload as T;
+
+  const result =
+    payload && typeof payload === 'object' && payload !== null && 'data' in (payload as any)
+      ? ((payload as any).data as T)
+      : (payload as T);
+
+  console.log('[http] result:', safeJsonStringify(result));
+  return result;
 }
 
 export const api = {
@@ -41,31 +55,34 @@ export const api = {
   },
   stores: {
     async create(body: { name: string; location?: string }, token: string) {
-      return http('/api/stores', { method: 'POST', body, token });
+      return http('/stores', { method: 'POST', body, token });
     },
-    async getOne(id: number, token: string) {
-      return http(`/api/stores/${id}`, { token });
+    async getOne(id: number, token?: string) {
+      return http(`/stores/${id}`, { token });
+    },
+    async list(token?: string) {
+      return http('/stores', { token });
     },
   },
   products: {
     async create(body: any, token: string) {
-      return http('/api/products', { method: 'POST', body, token });
+      return http('/products', { method: 'POST', body, token });
     },
-    async getOne(id: number, token: string) {
-      return http(`/api/products/${id}`, { token });
+    async getOne(id: number, token?: string) {
+      return http(`/products/${id}`, { token });
+    },
+    async list(token?: string) {
+      return http('/products', { token });
     },
   },
   sku: {
-    async list(token: string) {
+    async list(token?: string) {
       return http('/sku', { token });
     },
-    async create(
-      body: { skuCode: string; attributes?: Record<string, string>; productId: number },
-      token: string
-    ) {
+    async create(body: { skuCode: string; attributes?: Record<string, string>; productId: number }, token: string) {
       return http('/sku', { method: 'POST', body, token });
     },
-    async getOne(id: number, token: string) {
+    async getOne(id: number, token?: string) {
       return http(`/sku/${id}`, { token });
     },
     async update(id: number, body: any, token: string) {
@@ -76,16 +93,10 @@ export const api = {
     },
   },
   stock: {
-    async createInventory(
-      body: { storeId: number; productId: number; initialStocks?: any[] },
-      token: string
-    ) {
+    async createInventory(body: { storeId: number; productId: number; initialStocks?: any[] }, token: string) {
       return http('/stock/inventory', { method: 'POST', body, token });
     },
-    async listInventory(
-      query: { storeId?: number; productId?: number; page?: number; pageSize?: number },
-      token: string
-    ) {
+    async listInventory(query: { storeId?: number; productId?: number; page?: number; pageSize?: number }, token?: string) {
       const params = new URLSearchParams();
       if (query.storeId) params.set('storeId', String(query.storeId));
       if (query.productId) params.set('productId', String(query.productId));

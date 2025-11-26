@@ -1,3 +1,5 @@
+'use client';
+
 import { useState } from 'react';
 import { api } from '../lib/api';
 
@@ -9,8 +11,10 @@ export function useAuth() {
     setLoading(true);
     try {
       const res = await api.auth.login(email, password); // res is unwrapped { access_token, user }
-      setToken(res.access_token);
-      return res.access_token;
+      console.log('[useAuth] login result:', res);
+      console.log({res})
+      setToken(res?.data.access_token ?? null);
+      return res?.data ?? null;
     } finally {
       setLoading(false);
     }

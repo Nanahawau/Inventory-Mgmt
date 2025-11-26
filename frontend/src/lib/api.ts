@@ -37,6 +37,9 @@ export const api = {
     async getOne(id: number, token: string) {
       return http(`/api/stores/${id}`, { token });
     },
+    async list(token: string) {
+      return http(`/api/stores`, { token });
+    },
   },
   products: {
     async create(body: any, token: string) {
@@ -44,6 +47,9 @@ export const api = {
     },
     async getOne(id: number, token: string) {
       return http(`/api/products/${id}`, { token });
+    },
+    async list(token: string) {
+      return http(`/api/products`, { token });
     },
   },
   sku: {
