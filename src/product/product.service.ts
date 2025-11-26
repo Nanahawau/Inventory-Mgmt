@@ -86,4 +86,8 @@ export class ProductService {
     if (!p) throw new NotFoundException("product not found");
     return p;
   }
+
+   async find() {
+    return await this.productRepo.find();
+  }
 }

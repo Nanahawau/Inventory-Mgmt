@@ -1,28 +1,69 @@
 'use client';
 
-import { useState } from 'react';
-import { api } from '../lib/api';
+import { useEffect, useState, useCallback } from 'react';
+import { authClient } from '@/lib/auth-client';
+
+export type AuthUser = {
+  id?: number | string;
+  email?: string;
+  name?: string;
+  // add other fields your backend returns
+} | null;
+
+const USER_KEY = 'auth_user';
 
 export function useAuth() {
-  const [token, setToken] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  async function login(email: string, password: string) {
-    setLoading(true);
+  const [token, setTokenState] = useState<string | null>(() => authClient.getToken());
+  const [user, setUserState] = useState<AuthUser>(() => {
     try {
-      const res = await api.auth.login(email, password); // res is unwrapped { access_token, user }
-      console.log('[useAuth] login result:', res);
-      console.log({res})
-      setToken(res?.data.access_token ?? null);
-      return res?.data ?? null;
-    } finally {
-      setLoading(false);
+      const raw = sessionStorage.getItem(USER_KEY);
+      return raw ? (JSON.parse(raw) as AuthUser) : null;
+    } catch {
+      return null;
     }
-  }
+  });
 
-  function logout() {
-    setToken(null);
-  }
+  useEffect(() => {
+    const unsub = authClient.subscribe((t) => setTokenState(t));
+    return () => unsub();
+  }, []);
 
-  return { token, login, logout, loading };
+  const setToken = useCallback((t: string | null) => {
+    authClient.setToken(t);
+  }, []);
+
+  const setUser = useCallback((u: AuthUser) => {
+    try {
+      if (u) {
+        sessionStorage.setItem(USER_KEY, JSON.stringify(u));
+      } else {
+        sessionStorage.removeItem(USER_KEY);
+      }
+    } catch {
+      // ignore storage failures
+    }
+    setUserState(u);
+  }, []);
+
+  const logout = useCallback(() => {
+    authClient.clearToken();
+    try {
+      sessionStorage.removeItem(USER_KEY);
+    } catch {}
+    setUserState(null);
+    try {
+      // redirect to login/root
+      window.location.href = '/';
+    } catch {}
+  }, []);
+
+  return {
+    token,
+    setToken,
+    user,
+    setUser,
+    logout,
+  };
 }
+
+export default useAuth;

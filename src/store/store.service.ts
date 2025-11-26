@@ -28,4 +28,8 @@ export class StoreService {
     if (!store) throw new BadRequestException("store not found");
     return store;
   }
+
+  async find() {
+    return await this.storeRepo.find();
+  }
 }

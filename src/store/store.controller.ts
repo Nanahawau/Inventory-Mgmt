@@ -22,4 +22,9 @@ export class StoreController {
     const nid = Number(id);
     return this.storeService.findOne(nid);
   }
+
+  @Get()
+  async get() {
+    return this.storeService.find();
+  }
 }

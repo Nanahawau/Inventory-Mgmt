@@ -1,79 +1,89 @@
 'use client';
-import React, { useEffect, useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
-import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
 
-export function LoginForm() {
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import api from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
+
+export default function LoginForm() {
   const router = useRouter();
-  const { login, token } = useAuth(); // your hook provides login() and token
-  const [email, setEmail] = useState('');
+  const { setToken } = useAuth();
+
+  const [email, setEmail] = useState('admin@gmail.com');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-
-  // Redirect when token becomes available
-  useEffect(() => {
-    if (token) {
-      router.push('/dashboard');
-    }
-  }, [token, router]);
+  const [error, setError] = useState<string | null>(null);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError(null);
     setLoading(true);
     try {
-      // If your login returns a response object, capture it
-      const result = await login(email, password);
+      // Call backend via api helper
+      const res = await api.auth.login(email, password);
 
-      console.log({ result, token });
+      // Try common token locations and envelopes:
+      // - { access_token: '...' }
+      // - { token: '...' }
+      // - { data: { access_token: '...' } }
+      // - { data: { token: '...' } }
+      const token =
+        (res && (res as any).access_token) ||
+        (res && (res as any).token) ||
+        (res && (res as any).data && ((res as any).data.access_token || (res as any).data.token)) ||
+        null;
 
-      // If login returned a token in result.data.access_token or result.access_token, store it
-      const returnedToken = result.access_token || (token ?? null);
-      if (returnedToken) {
-        try {
-          localStorage.setItem('access_token', returnedToken);
-        } catch (_) {
-          // ignore storage errors
-        }
+      console.log('login response:', res, 'extracted token:', token);
+
+      if (!token) {
+        // Surface clear error if backend should return token but didn't
+        throw new Error('Login succeeded but no access token was returned.');
       }
 
-      toast.success('Logged in');
-      // If token was set synchronously by the hook or returned above the useEffect will redirect.
-      // As a fallback, if token isn't set yet but we got a returnedToken, push manually:
-      if (returnedToken && !token) {
-        router.push('/dashboard');
-      }
+      // Persist token via hook (authClient will schedule expiration, subscribers updated)
+      setToken(token);
+
+      // Redirect into the app (replace keeps history clean)
+      router.replace('/dashboard');
     } catch (err: any) {
-      console.error('Login failed', err);
-      toast.error(err?.message || 'Login failed');
+      console.error('Login error', err);
+      setError(err?.message || 'Login failed');
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4 max-w-sm">
+    <form onSubmit={onSubmit} className="space-y-4 max-w-sm" aria-label="login-form">
       <div>
         <label className="block text-sm font-medium text-slate-700">Email</label>
         <input
+          type="email"
+          required
           className="w-full rounded border px-3 py-2"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          autoComplete="username"
         />
       </div>
 
       <div>
         <label className="block text-sm font-medium text-slate-700">Password</label>
         <input
-          className="w-full rounded border px-3 py-2"
           type="password"
+          required
+          className="w-full rounded border px-3 py-2"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          autoComplete="current-password"
         />
       </div>
 
+      {error ? <div className="text-sm text-red-600">{error}</div> : null}
+
       <div>
         <button
+          type="submit"
           className="rounded bg-black px-4 py-2 text-white disabled:opacity-50"
           disabled={loading}
         >
@@ -83,5 +93,3 @@ export function LoginForm() {
     </form>
   );
 }
-
-export default LoginForm;
