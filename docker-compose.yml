@@ -66,6 +66,7 @@ services:
         condition: service_started
     environment:
       NEXT_PUBLIC_API_URL: http://api:3000
+      PORT: 3001
     ports:
       - "3001:3001"
 
