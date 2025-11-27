@@ -3,10 +3,13 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import api from '@/lib/api';
+import StoresHeader from '@/components/stores/StoresHeader';
 
 type Store = { id: number | string; name: string; location?: string; createdAt?: string };
 
 export default function StoresPage() {
+ 
+
   const [stores, setStores] = useState<Store[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,12 +35,14 @@ export default function StoresPage() {
     };
   }, []);
 
-  return (
-    <div>
-      <div className="mb-6">
+   return (
+    <>
+      <StoresHeader />
+       <div>
+      {/* <div className="mb-6">
         <h1 className="text-2xl font-bold">Stores</h1>
         <p className="text-sm text-slate-600 mt-1">Manage your store locations</p>
-      </div>
+      </div> */}
 
       {loading ? (
         <div className="space-y-2">
@@ -68,5 +73,6 @@ export default function StoresPage() {
         </div>
       )}
     </div>
+    </>
   );
 }

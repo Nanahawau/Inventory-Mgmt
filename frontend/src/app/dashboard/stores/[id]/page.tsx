@@ -46,36 +46,20 @@ export default function StoreDetailPage() {
       setLoading(true);
       setError(null);
       try {
-        // Get store metadata (name, location)
-        try {
-          const s = await api.stores.getOne(id);
-          if (!cancelled) setStore(s);
-        } catch {
-          // ignore store fetch failure (we'll still try products)
-        }
+        // // Get store metadata (name, location)
+        // try {
+        //   const s = await api.stores.getOne(id);
+        //   if (!cancelled) setStore(s);
+        // } catch {
+        //   // ignore store fetch failure (we'll still try products)
+        // }
 
         // Attempt to fetch products for this store (expect nested skus ideally)
-        const pRes = await api.products.list({ storeId: id });
+        const pRes = await api.products.list({ storeId: Number(id) });
         const pItems = Array.isArray(pRes) ? pRes : (pRes.items ?? pRes);
-        // If products exist but no skus, attempt a best-effort per-product SKU fetch (fallback)
-        let enriched = pItems || [];
+  
 
-        const needSkus = enriched.length && enriched[0] && enriched[0].skus === undefined;
-        if (needSkus) {
-          // try to fetch all SKUs and filter per product (inefficient fallback)
-          try {
-            const allSkus = await api.sku.list();
-            const skusArr: SKU[] = Array.isArray(allSkus) ? allSkus : (allSkus.items ?? allSkus ?? []);
-            enriched = enriched.map((prod: any) => ({
-              ...prod,
-              skus: skusArr.filter((s) => String(s.productId) === String(prod.id)),
-            }));
-          } catch {
-            // ignore sku fetch failure
-          }
-        }
-
-        if (!cancelled) setProducts(enriched);
+        if (!cancelled) setProducts(pItems);
       } catch (err: any) {
         if (!cancelled) setError(err.message || 'Failed to load store details');
       } finally {
@@ -108,10 +92,16 @@ export default function StoreDetailPage() {
       ) : (
         <div className="space-y-6">
           {products && products.length ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {products.map((p) => (
-                <StoreProductCard key={p.id} product={p} />
-              ))}
+               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {products?.map((p) =>
+                (p.skus ?? []).map((sku) => (
+                  <StoreProductCard
+                    key={`${p.id}-${sku.id}`}
+                    product={p}
+                    sku={sku}
+                  />
+                ))
+              )}
             </div>
           ) : (
             <div className="bg-white p-6 rounded shadow-sm">No products found for this store.</div>

@@ -1,108 +1,68 @@
 'use client';
 
-import React, { useState } from 'react';
-import SKUChip from './SKUChip';
-import SKUEditModal from './SKUEditModal';
+import React from 'react';
+import Link from 'next/link';
 
 type SKU = {
   id: number | string;
   skuCode?: string;
   attributes?: Record<string, string>;
-  quantity?: number;
-  productId?: number | string;
+  qty?: number | null;
 };
 
-type Product = {
-  id: number | string;
-  name: string;
-  category?: string;
-  price?: string | number;
-  description?: string;
-  skus?: SKU[];
+type Props = {
+  product: any;
+  sku?: SKU | null;
+  className?: string;
 };
 
-function formatPrice(p: string | number | undefined) {
-  if (p == null || p === '') return '—';
-  const n = typeof p === 'number' ? p : Number(p);
-  if (Number.isNaN(n)) return String(p);
-  return n.toLocaleString(undefined, { style: 'currency', currency: 'USD' });
-}
-
-export default function StoreProductCard({
-  product,
-  editable = false,
-}: {
-  product: Product;
-  // editable = true when shown in Products section (allows direct SKU edits)
-  editable?: boolean;
-}) {
-  const [modalOpen, setModalOpen] = useState(false);
-  const [activeSku, setActiveSku] = useState<SKU | null>(null);
-  const [skus, setSkus] = useState<SKU[] | undefined>(product.skus);
-
-  function handleAdjust(sku: SKU) {
-    if (!editable) {
-      // In stores view we shouldn't edit: navigate to product details by link from SKUChip
-      return;
-    }
-    setActiveSku(sku);
-    setModalOpen(true);
+/**
+ * Defensive StockProductCard
+ * - avoids crashing if `sku` is undefined (renders a placeholder / warning)
+ * - logs a warning so you can find the caller that passed an invalid sku
+ * - preserves the SKU display and navigation when `sku` is present
+ */
+export default function StockProductCard({ product, sku, className = '' }: Props) {
+  if (!sku) {
+    // Render a harmless placeholder instead of throwing.
+    // Keep this visible so you can spot missing data while testing.
+    console.warn('[StockProductCard] called with undefined sku for productId=', product?.id);
+    return (
+      <div className={`border rounded-md p-3 flex items-center justify-between ${className}`}>
+        <div>
+          <div className="font-semibold text-slate-900">Missing SKU</div>
+          <div className="text-xs text-slate-500 mt-1">No SKU data provided</div>
+        </div>
+      </div>
+    );
   }
 
-  function onSaved(updated: SKU) {
-    // update local state so the UI reflects the changed SKU immediately
-    setSkus((prev) => (prev ? prev.map((s) => (String(s.id) === String(updated.id) ? { ...s, ...updated } : s)) : prev));
-  }
-
-  return (
-    <article className="bg-white rounded-lg shadow p-6">
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-        <div className="min-w-0">
-          <h3 className="text-lg font-semibold text-slate-900 truncate">{product.name}</h3>
-          <div className="mt-1 text-xs text-slate-500">
-            ID: {product.id} {product.category ? `• ${product.category}` : ''}
-          </div>
+    return (
+    <div className="rounded border bg-white p-4">
+      <div className="flex items-start justify-between">
+        <div>
+          <h3 className="font-medium">{product.name}</h3>
+          {product.category ? (
+            <p className="text-xs text-slate-500">Category: {product.category}</p>
+          ) : null}
+          {typeof product.price !== 'undefined' ? (
+            <p className="text-xs text-slate-500">Price: {String(product.price)}</p>
+          ) : null}
           {product.description ? (
-            <p className="mt-3 text-sm text-slate-600">{product.description}</p>
+            <p className="mt-1 text-sm text-slate-600">{product.description}</p>
+          ) : null}
+          <p className="mt-2 text-xs text-slate-500">SKU: {sku.skuCode ?? sku.id}</p>
+          {sku.attributes && Object.keys(sku.attributes).length ? (
+            <div className="mt-1 text-xs text-slate-500">
+              {Object.entries(sku.attributes).map(([k, v]) => (
+                <span key={k} className="mr-3">
+                  {k}: {v}
+                </span>
+              ))}
+            </div>
           ) : null}
         </div>
-
-        <div className="flex items-start gap-3">
-          <div className="text-right">
-            <div className="text-sm text-slate-500">Price</div>
-            <div className="text-lg font-semibold text-slate-900">{formatPrice(product.price)}</div>
-          </div>
-        </div>
       </div>
-
-      <div className="mt-6">
-        <div className="flex items-center justify-between mb-3">
-          <div className="text-sm font-medium text-slate-700">SKUs</div>
-          <div className="text-xs text-slate-400">Total: {(skus?.length ?? 0)}</div>
-        </div>
-
-        {skus && skus.length ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {skus.map((s) => (
-              <SKUChip key={s.id} sku={{ ...s, productId: product.id }} editable={editable} onAdjust={handleAdjust} />
-            ))}
-          </div>
-        ) : (
-          <div className="text-sm text-slate-500">No SKUs for this product.</div>
-        )}
-      </div>
-
-      {editable && (
-        <SKUEditModal
-          open={modalOpen}
-          sku={activeSku}
-          onClose={() => {
-            setModalOpen(false);
-            setActiveSku(null);
-          }}
-          onSaved={onSaved}
-        />
-      )}
-    </article>
+    </div>
   );
 }

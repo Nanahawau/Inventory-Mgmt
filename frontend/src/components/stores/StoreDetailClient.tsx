@@ -24,10 +24,8 @@ export default function StoreDetailClient() {
       setLoading(true);
       setError(null);
       try {
-        const s = await api.stores.getOne(id);
-        if (!cancelled) setStore(s);
         // try backend-provided products or fallback to filtered products list
-        const pRes = await api.products.list({ storeId: id });
+        const pRes = await api.products.list({ storeId: Number(id) });
         const items = Array.isArray(pRes) ? pRes : (pRes.items ?? pRes);
         if (!cancelled) setProducts(items);
       } catch (err: any) {
