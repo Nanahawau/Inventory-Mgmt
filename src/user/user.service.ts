@@ -1,4 +1,3 @@
-// src/user/user.service.ts
 import { Injectable, UnauthorizedException, BadRequestException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
@@ -13,13 +12,11 @@ export class UserService {
     private readonly jwtService: JwtService
   ) {}
 
-  // Create an admin user. Expect { email, password } (additional fields ignored)
   async create(user: { email: string; password: string }) {
     if (!user?.email || !user?.password) {
       throw new BadRequestException("Email and password required");
     }
 
-    // check uniqueness
     const exists = await this.userRepo.findOne({ where: { email: user.email } });
     if (exists) throw new BadRequestException("Email already exists");
 

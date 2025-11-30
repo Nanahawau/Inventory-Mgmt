@@ -1,5 +1,5 @@
-import { InventoryItem } from "src/stock/entities/inventoryitems.entity";
-import { Sku } from "src/sku/entities/sku.entity";
+import { InventoryItem } from "../../stock/entities/inventoryitems.entity";
+import { Sku } from "../../sku/entities/sku.entity";
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -7,20 +7,10 @@ import {
   ManyToOne,
   CreateDateColumn,
   UpdateDateColumn,
-  Index
+  Index,
+  RelationId
 } from "typeorm";
 
-/**
- * Reservation / hold record for a SKU at an inventory item (e.g., central pool).
- * - id: integer primary key
- * - inventoryItem: the InventoryItem (store or central) this reservation is against
- * - sku: the SKU being reserved
- * - quantity: integer reserved quantity
- * - status: lifecycle state ("active" | "fulfilled" | "released")
- * - reference: optional external id (order id, etc.)
- * - expiresAt: when the reservation automatically becomes releasable
- * - createdAt / updatedAt timestamps
- */
 @Entity({ name: "reservations" })
 @Index(["status", "expiresAt"])
 export class Reservation {
@@ -38,8 +28,14 @@ export class Reservation {
   @Column("integer")
   quantity!: number;
 
+  @RelationId((r: Reservation) => r.sku)
+  skuId!: number;
+
+  @RelationId((r: Reservation) => r.inventoryItem)
+  inventoryItemId!: number;
+
   @Column({ type: "varchar", length: 32, default: "active" })
-  status!: "active" | "fulfilled" | "released";
+  status!: "active" | "cancelled" | "fulfilled";
 
   @Column({ nullable: true, type: "varchar" })
   reference?: string | null;

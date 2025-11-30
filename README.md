@@ -1,98 +1,170 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Inventory Management System
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## Overview
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+This project is a full-stack inventory management system designed to handle central and branch stores, products, SKUs, inventory, reservations, and stock transfers.  
+It consists of a **NestJS backend** (TypeScript) and a **Next.js frontend** (React + TailwindCSS).
 
-## Description
+---
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Tech Stack
 
-## Project setup
+- **Backend:**  
+  - NestJS (TypeScript)
+  - TypeORM (PostgreSQL)
+  - Class Validator/Transformer
+  - Docker
+  - JWT authentication
 
-```bash
-$ npm install
+- **Frontend:**  
+  - Next.js (React)
+  - TailwindCSS
+  - Docker
+
+---
+
+## Setup & Installation
+
+### Prerequisites
+
+- Docker & Docker Compose installed
+- Node.js (for local development)
+- PostgreSQL (for local development)
+
+### Steps
+
+1. **Clone the repository**
+2. **Configure environment variables:**  
+   - In the `frontend` folder, create a `.env.local` file and set your frontend environment variables.
+   - In the `backend` folder, create a `.env` file and set your backend environment variables.
+   - You can copy from `.env.sample`.
+3. **Start with Docker Compose:**
+   ```sh
+   docker-compose up --build
+   ```
+   This will:
+   - Start a PostgreSQL database
+   - Build and seed the backend
+   - Start the API server (`localhost:3000`)
+   - Start the frontend (`localhost:3001`)
+
+4. **Manual (local) development:**  
+   - Backend:  
+     ```sh
+     cd backend
+     npm install
+     npm run start:dev
+     ```
+   - Frontend:  
+     ```sh
+     cd frontend
+     npm install
+     npm run dev
+
+     # Note: You must create your db locally first if you decide to run out of Docker. 
+     ```
+
+---
+
+## Setting Up PostgreSQL with Docker (Standalone)
+
+If you want to run a PostgreSQL database by yourself (outside of docker-compose), use the following command:
+
+```sh
+docker run --name inventory-db -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=inventory_mgmt -p 5433:5432 -d postgres:16
 ```
 
-## Compile and run the project
+- This will start a PostgreSQL 16 container on port 5432 and automatically create the database `inventory_mgmt`.
+- Update your `.env` or backend config to use, there's a sample in the .env.sample
+  ```
+  DB_HOST=localhost
+  DB_PORT=5432
+  DB_USER=postgres
+  DB_PASSWORD=postgres
+  DB_NAME=inventory_mgmt 
+  ```
 
-```bash
-# development
-$ npm run start
+---
 
-# watch mode
-$ npm run start:dev
+## How It Works
 
-# production mode
-$ npm run start:prod
-```
+### Stores
 
-## Run tests
+- **Central Store:**  
+  - The main warehouse for all products and SKUs.
+- **Branch Stores:**  
+  - Additional stores/warehouses that can hold inventory and receive transfers.
 
-```bash
-# unit tests
-$ npm run test
+### Products & SKUs
 
-# e2e tests
-$ npm run test:e2e
+- **Products:**  
+  - Created via the frontend or API.
+  - Each product can have multiple SKUs (stock keeping units) with unique codes and attributes.
 
-# test coverage
-$ npm run test:cov
-```
+- **Creating Products with SKUs:**  
+  - Go to Products → Add Product.
+  - Enter product details and add one or more SKUs (with attributes like color, size, etc.).
 
-## Deployment
+### Inventory
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+- **Creating Inventory:**  
+  - Add inventory to the central store for a product/SKU.
+  - Inventory can be viewed and managed per store.
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### Reservations
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
+- **Reserving Inventory:**  
+  - Reserve stock from the central store for a branch.
+  - Reservations are tracked and can be fulfilled or cancelled.
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### Transfers
 
-## Resources
+- **Transferring Inventory:**  
+  - Reserved inventory can be transferred from the central store to a branch.
 
-Check out a few resources that may come in handy when working with NestJS:
+---
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+## Initial Seeding
 
-## Support
+- On first run, the backend seeds the database with sample stores, products, SKUs, and inventory.
+- The seeder runs automatically via the `seed` service in Docker Compose.
+- You can manually re-run the seeder with:
+  ```sh
+  npm run seed
+  ```
+- **Default login for the app:**  
+  - Email: `admin@gmail.com`  
+  - Password: `admin`
+- **Authentication:**  
+  - The backend API uses JWT for authentication.
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+---
 
-## Stay in touch
+## Useful Endpoints
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+- **Backend API:**  
+  - `/api/stores` — Manage stores
+  - `/api/products` — Manage products
+  - `/api/sku` — Manage SKUs
+  - `/api/stock/inventory` — Manage inventory
+  - `/api/stock/reservations` — Manage reservations
+  - `/api/stock/transfer` — Transfer reserved inventory
 
-## License
+- **Frontend:**  
+  - `/dashboard` — Aggregated overview
+  - `/dashboard/stores` — Manage stores
+  - `/dashboard/products` — Manage products
+  - `/dashboard/stores/central` — Central inventory
+  - `/dashboard/stores/branches` — Branch inventory
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+
+## Possible Improvements
+
+- **Role Management:**  
+  Implement user roles (e.g. admin, manager, staff) with permissions to restrict access to certain features and endpoints.
+
+- **Notifications:**  
+  Add notification for low stock, reservation status changes, or transfer completions.
+
+- **Reporting & Analytics:**  
+  Provide dashboards and downloadable reports for inventory movement, sales, and usage trends.

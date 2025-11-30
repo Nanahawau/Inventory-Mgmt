@@ -1,9 +1,8 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Query, HttpStatus, HttpCode, ValidationPipe, UsePipes } from '@nestjs/common';
 import { StockService } from './stock.service';
-import { AdjustSkuStockDto } from './dto/adjust-sku-stock.dto';
-import { CreateTransferDto } from './dto/create-transfer.dto';
 import { CreateReservationDto } from './dto/create-reservation.dto';
 import { CreateInventoryDto } from './dto/create-inventory.dto';
+import { TransferStockDto } from './dto/transfer-stock.dto';
 
 @Controller('stock')
 @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
@@ -12,42 +11,29 @@ export class StockController {
 
   @Post('reservations')
   async createReservation(@Body() body: CreateReservationDto) {
-    // returns the created reservation and updated skuStock
     return this.stockService.reserve(body);
   }
 
-  @Post("reservations/:id/fulfill")
-  @HttpCode(HttpStatus.OK)
-  async fulfillReservation(@Param("id") id: string) {
-    return this.stockService.fulfillReservation(id);
-  }
-
-  @Post("reservations/:id/release")
-  @HttpCode(HttpStatus.OK)
-  async releaseReservation(@Param("id") id: string) {
-    return this.stockService.releaseReservation(id);
+  @Post("transfer")
+  async transferStock(@Body() body: TransferStockDto) {
+    return this.stockService.moveFromCentral(body);
   }
 
   @Get('reservations')
-  async listReservation(@Query("inventoryItemId") inventoryItemId?: string, @Query("skuId") skuId?: string, @Query("status") status?: string) {
-    // StockService.findReservations should accept filters; adapt if your service API differs
-    return this.stockService.findReservations({ inventoryItemId, skuId, status });
-  }
-
-  @Post('transfers')
-  async createTransfer(@Body() body: CreateTransferDto) {
-    // returns transfer header + movements + updated sku stocks
-    return this.stockService.createTransfer(body);
-  }
-
-  @Get('transfers')
-  async listTransfer(@Query("inventoryItemId") inventoryItemId?: string) {
-    return this.stockService.findTransfers({ inventoryItemId });
-  }
-
-  @Post("sku-stock/:id/adjust")
-  async adjustSkuStock(@Param("id") id: string, @Body() body: AdjustSkuStockDto) {
-    return this.stockService.adjustSkuStock(id, body.delta, body.type, body.reference);
+  async listReservation(
+    @Query("inventoryItemId") inventoryItemId?: string,
+    @Query("skuId") skuId?: string,
+    @Query("status") status?: string,
+    @Query("page") page = "1",
+    @Query("pageSize") pageSize = "20"
+  ) {
+    return this.stockService.findReservations({
+      inventoryItemId,
+      skuId,
+      status,
+      page: Number(page),
+      pageSize: Number(pageSize),
+    });
   }
 
   @Get("sku-stock/:id")
@@ -69,5 +55,14 @@ export class StockController {
       page: Number(page),
       pageSize: Number(pageSize)
     });
+  }
+
+  @Delete('inventory/:id')
+  async deleteInventoryById(@Param('id') id: string) {
+    return this.stockService.deleteInventoryItemById(id);
+  }
+  @Delete('reservations/:id')
+  async deleteReservation(@Param('id') id: string, @Query('reference') reference?: string) {
+    return this.stockService.cancelReservation(Number(id), reference);
   }
 }

@@ -43,7 +43,7 @@ async function run() {
     const storeName = 'Central';
     let store = await storeRepo.findOne({ where: { name: storeName } });
     if (!store) {
-      const newStore = storeRepo.create({ name: storeName, location: 'HQ' });
+      const newStore = storeRepo.create({ name: storeName, location: 'HQ', isCentral: true});
       store = await storeRepo.save(newStore);
       console.log(`Seed: created store "${storeName}" (#${store.id})`);
     } else {
@@ -91,7 +91,7 @@ async function run() {
         const changed =
           JSON.stringify(sku.attributes ?? {}) !== JSON.stringify(s.attributes ?? {});
         if (changed) {
-          sku.attributes = s.attributes;
+          sku.attributes = s.attributes ?? null;
           await skuRepo.save(sku);
           console.log(`Seed: updated SKU ${sku.skuCode} attributes`);
         } else {

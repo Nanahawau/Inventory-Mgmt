@@ -1,78 +1,34 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import api from '@/lib/api';
-import StoresHeader from '@/components/stores/StoresHeader';
-
-type Store = { id: number | string; name: string; location?: string; createdAt?: string };
 
 export default function StoresPage() {
- 
+  return (
+    <section className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Stores</h1>
+        <Link href="/dashboard/stores/new" className="rounded bg-slate-900 text-white px-4 py-2 text-sm">
+          Add store
+        </Link>
+      </div>
 
-  const [stores, setStores] = useState<Store[] | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await api.stores.list();
-        const items = Array.isArray(res) ? res : res?.items ?? res;
-        if (!cancelled) setStores(items);
-      } catch (err: any) {
-        if (!cancelled) setError(err.message || 'Failed to load stores');
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-   return (
-    <>
-      <StoresHeader />
-       <div>
-      {/* <div className="mb-6">
-        <h1 className="text-2xl font-bold">Stores</h1>
-        <p className="text-sm text-slate-600 mt-1">Manage your store locations</p>
-      </div> */}
-
-      {loading ? (
-        <div className="space-y-2">
-          <div className="h-8 w-1/3 bg-slate-100 rounded animate-pulse" />
-          <div className="h-8 w-2/3 bg-slate-100 rounded animate-pulse" />
+      <div className="grid gap-6 md:grid-cols-2">
+        <div className="rounded border bg-white p-4">
+          <h2 className="text-lg font-medium">Central Store</h2>
+          <p className="text-sm text-slate-600 mt-1">Manage central inventory and transfers.</p>
+          <div className="mt-3 flex gap-3">
+            <Link href="/dashboard/stores/central" className="text-blue-700 text-sm hover:underline">Open</Link>
+          </div>
         </div>
-      ) : error ? (
-        <div className="bg-red-50 text-red-700 p-4 rounded">{error}</div>
-      ) : (
-        <div className="space-y-3">
-          {stores && stores.length ? (
-            <ul className="space-y-2">
-              {stores.map((s) => (
-                <li key={s.id} className="bg-white p-4 rounded shadow-sm flex items-center justify-between">
-                  <div>
-                    <Link href={`/dashboard/stores/${s.id}`} className="font-medium text-slate-900 hover:underline">
-                      {s.name}
-                    </Link>
-                    {s.location ? <div className="text-sm text-slate-500">{s.location}</div> : null}
-                  </div>
-                  <div className="text-xs text-slate-500">{s.createdAt ? new Date(s.createdAt).toLocaleDateString() : null}</div>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <div className="bg-white p-4 rounded shadow-sm">No stores found.</div>
-          )}
+
+        <div className="rounded border bg-white p-4">
+          <h2 className="text-lg font-medium">Branch Stores</h2>
+          <p className="text-sm text-slate-600 mt-1">View and manage branch store inventories.</p>
+          <div className="mt-3 flex gap-3">
+            <Link href="/dashboard/stores/branches" className="text-blue-700 text-sm hover:underline">Browse branches</Link>
+          </div>
         </div>
-      )}
-    </div>
-    </>
+      </div>
+    </section>
   );
 }

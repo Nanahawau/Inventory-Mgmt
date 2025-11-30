@@ -1,24 +1,22 @@
 import './globals.css';
-import Header from '../components/ui/header';
-import Footer from '../components/ui/footer';
 import React from 'react';
+import TopNav from '@/components/TopNav';
+import { ToastProvider } from '@/context/toast-context';
 
 export const metadata = {
-  title: 'Inventory Management',
-  description: 'Inventory Management app',
+  title: 'Inventory Management App',
+  description: 'Inventory management dashboard',
 };
 
-// Root layout: do NOT render Sidebar here. Reserved for dashboard nested layout.
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-slate-50 text-slate-800 antialiased">
-        <Header />
-        <main className="site-main site-container flex-1 w-full">
-          {children}
-        </main>
-        <Footer />
-      </body>
+       <body className="min-h-screen bg-slate-50">
+         <ToastProvider>
+           <TopNav />
+           <main className="mx-auto max-w-7xl px-4 py-6">{children}</main>
+         </ToastProvider>
+       </body>
     </html>
-  );
+   );
 }

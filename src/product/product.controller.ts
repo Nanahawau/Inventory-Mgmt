@@ -1,9 +1,10 @@
-import { Controller, Post, Body, UsePipes, ValidationPipe, Get, Param } from "@nestjs/common";
+import { Controller, Post, Body, UsePipes, ValidationPipe, Get, Param, Put, Delete, ParseIntPipe, Query } from "@nestjs/common";
 import { ProductService } from "./product.service";
 import { CreateProductDto } from "./dto/create-product.dto";
+import { UpdateProductDto } from "./dto/update-product.dto";
+import { ListProductsDto } from "./dto/list-product.dto";
 
-
-@Controller("api/products")
+@Controller("products")
 @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
@@ -14,13 +15,23 @@ export class ProductController {
   }
 
   @Get(":id")
-  async getOne(@Param("id") id: string) {
-    const nid = Number(id);
-    return this.productService.findOne(nid);
+  async getOne(@Param("id", ParseIntPipe) id: number) {
+    return this.productService.findOne(id);
   }
 
   @Get()
-  async get() {
-    return this.productService.find();
+  async get(@Query() query: ListProductsDto) {
+    const data = await this.productService.find(query);
+    return data;
+  }
+
+  @Put(":id")
+  async update(@Param("id", ParseIntPipe) id: number, @Body() body: UpdateProductDto) {
+    return this.productService.updateProduct(id, body);
+  }
+
+  @Delete(":id")
+  async delete(@Param("id", ParseIntPipe) id: number) {
+    return this.productService.deleteProduct(id);
   }
 }

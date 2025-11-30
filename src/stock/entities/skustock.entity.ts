@@ -1,4 +1,4 @@
-import { InventoryItem } from "src/stock/entities/inventoryitems.entity";
+import { InventoryItem } from "../../stock/entities/inventoryitems.entity";
 import {
   Entity,
   PrimaryGeneratedColumn,

@@ -1,4 +1,5 @@
-import { Product } from "src/product/entities/product.entity";
+
+import { Product } from "../../product/entities/product.entity";
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, Index } from "typeorm";
 
 
@@ -11,9 +12,8 @@ export class Sku {
   @Index()
   skuCode!: string;
 
-  // JSON details like { color: "red", size: "M" }
-  @Column("simple-json", { nullable: true })
-  attributes?: Record<string, any> | null;
+  @Column({ type: 'json', nullable: true })
+  attributes: Record<string, string> | null;
 
   @ManyToOne(() => Product, (product) => product.skus, { onDelete: "CASCADE" })
   product!: Product;

@@ -1,61 +1,114 @@
-import { api } from '@/lib/http';
+'use client';
 
-function countFrom(data: any): number {
-  if (Array.isArray(data)) return data.length;
-  if (data && typeof data === 'object' && Array.isArray((data as any).items)) return (data as any).items.length;
-  if (data && typeof data === 'object' && typeof (data as any).count === 'number') return (data as any).count;
-  return 0;
+import { useEffect, useState } from 'react';
+import api from '@/lib/api';
+
+interface SkuStock {
+  stock: number;
 }
 
-export default async function Page() {
-  // Fetch via shared http client (no relative fetch calls)
-  let storesCount = 0;
-  let productsCount = 0;
-  let skusCount = 0;
+interface InventoryItem {
+  skuStocks: SkuStock[];
+}
 
-  try {
-    const [stores, products, skus] = await Promise.all([
-      api.stores.list().catch(() => []),
-      api.products.list().catch(() => []),
-      api.sku.list().catch(() => []),
-    ]);
-    storesCount = countFrom(stores);
-    productsCount = countFrom(products);
-    skusCount = countFrom(skus);
-  } catch {
-    // ignore; cards will show 0
-  }
+interface Branch {
+  id: number;
+}
+
+export default function DashboardPage() {
+  const [storeCount, setStoreCount] = useState(0);
+  const [productCount, setProductCount] = useState(0);
+  const [skuCount, setSkuCount] = useState(0);
+  const [lowStockCount, setLowStockCount] = useState(0);
+  const [reservedCount, setReservedCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchAggregates() {
+      setLoading(true);
+      try {
+        // 1. Stores (branches + central)
+        const allBranches = await api.stores.listBranches();
+        setStoreCount(allBranches?.meta?.total ?? 0);
+
+        // 2. Products
+        const productsRes = await api.products.list({ page: 1, pageSize: 1 });
+        setProductCount(productsRes?.meta?.total ?? 0);
+
+        // 3. SKUs
+        const skuRes = await api.sku.list({ page: 1, pageSize: 1 });
+        setSkuCount(skuRes?.meta?.total ?? 0);
+
+        // 4. Low stock SKUs (stock < 5)
+        let lowStock = 0;
+        // Central
+        const centralInvRes = await api.stock.listInventory({ page: 1, pageSize: 100, storeId: centralRes?.id });
+        if (Array.isArray(centralInvRes?.data)) {
+          centralInvRes.data.forEach((item: InventoryItem) => {
+            if (Array.isArray(item.skuStocks)) {
+              lowStock += item.skuStocks.filter((ss: SkuStock) => Number(ss.stock) < 5).length;
+            }
+          });
+        }
+        // Branches
+        if (branchTotal > 0) {
+          const branchesListRes = await api.stores.listBranches({ page: 1, pageSize: branchTotal });
+          const branchList: Branch[] = Array.isArray(branchesListRes?.data) ? branchesListRes.data : [];
+          for (const branch of branchList) {
+            const branchInvRes = await api.stock.listInventory({ page: 1, pageSize: 100, storeId: branch.id });
+            if (Array.isArray(branchInvRes?.data)) {
+              branchInvRes.data.forEach((item: InventoryItem) => {
+                if (Array.isArray(item.skuStocks)) {
+                  lowStock += item.skuStocks.filter((ss: SkuStock) => Number(ss.stock) < 5).length;
+                }
+              });
+            }
+          }
+        }
+        setLowStockCount(lowStock);
+
+        // 5. Reserved inventory (sum of active reservations)
+        const resvRes = await api.stock.listReservations({ page: 1, pageSize: 100, status: 'active' });
+        const reserved = Array.isArray(resvRes?.data)
+          ? resvRes.data.reduce((acc: number, r: { quantity?: number }) => acc + (Number(r.quantity) || 0), 0)
+          : 0;
+        setReservedCount(reserved);
+
+      } catch (e) {
+        // Optionally handle error
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchAggregates();
+  }, []);
 
   return (
-    <main className="site-container site-main">
-      <div className="page-hero">
-        <h1 className="text-3xl font-semibold text-slate-900">Dashboard</h1>
-        <p className="mt-1 text-slate-500">Overview and aggregated inventory data</p>
+    <section className="space-y-6">
+      <h1 className="text-3xl font-bold">Dashboard</h1>
+      <p className="text-slate-600">Overview and aggregated inventory data</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+        <div className="rounded bg-white border p-6 flex flex-col">
+          <span className="text-lg font-semibold">Stores</span>
+          <span className="mt-2 text-4xl font-bold">{loading ? '...' : storeCount}</span>
+        </div>
+        <div className="rounded bg-white border p-6 flex flex-col">
+          <span className="text-lg font-semibold">Products</span>
+          <span className="mt-2 text-4xl font-bold">{loading ? '...' : productCount}</span>
+        </div>
+        <div className="rounded bg-white border p-6 flex flex-col">
+          <span className="text-lg font-semibold">SKUs</span>
+          <span className="mt-2 text-4xl font-bold">{loading ? '...' : skuCount}</span>
+        </div>
+        <div className="rounded bg-white border p-6 flex flex-col">
+          <span className="text-lg font-semibold">Low stock SKUs</span>
+          <span className="mt-2 text-4xl font-bold">{loading ? '...' : lowStockCount}</span>
+        </div>
+        <div className="rounded bg-white border p-6 flex flex-col">
+          <span className="text-lg font-semibold">Reserved Inventory</span>
+          <span className="mt-2 text-4xl font-bold">{loading ? '...' : reservedCount}</span>
+        </div>
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="card">
-          <div className="card-title">Stores</div>
-          <div className="text-3xl font-bold">{storesCount}</div>
-        </div>
-        <div className="card">
-          <div className="card-title">Products</div>
-          <div className="text-3xl font-bold">{productsCount}</div>
-        </div>
-        <div className="card">
-          <div className="card-title">SKUs</div>
-          <div className="text-3xl font-bold">{skusCount}</div>
-        </div>
-        <div className="card">
-          <div className="card-title">Low stock</div>
-          <div className="text-3xl font-bold">—</div>
-        </div>
-      </div>
-
-      <div className="card mt-6">
-        <div className="card-title">Recent activity</div>
-        <p className="muted">No recent activity available — implement server events here.</p>
-      </div>
-    </main>
+    </section>
   );
 }

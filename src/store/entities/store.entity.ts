@@ -1,4 +1,4 @@
-import { InventoryItem } from "src/stock/entities/inventoryitems.entity";
+import { InventoryItem } from "../../stock/entities/inventoryitems.entity";
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -16,10 +16,13 @@ export class Store {
 
   @Column()
   @Index()
-  name?: string;
+  name!: string;
 
   @Column({ nullable: true })
   location?: string;
+
+  @Column({ default: false, type: "boolean", name: "is_central" })
+  isCentral?: boolean;
 
   @CreateDateColumn({ type: "timestamptz" })
   createdAt?: Date;

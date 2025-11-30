@@ -1,5 +1,4 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-console.log('[http] INIT NEXT_PUBLIC_API_URL =', API_URL);
 
 type HttpInit = Omit<RequestInit, 'body'> & { token?: string; body?: any };
 
@@ -30,8 +29,6 @@ async function http<T>(path: string, init?: HttpInit): Promise<T> {
   const isJson = contentType.includes('application/json');
   const payload = isJson ? await res.json() : await res.text();
 
-  console.log('[http] url:', url, 'status:', res.status, 'payload:', safeJsonStringify(payload));
-
   if (!res.ok) {
     const message = extractErrorMessage(payload);
     console.error('[http] error:', message);
@@ -43,7 +40,6 @@ async function http<T>(path: string, init?: HttpInit): Promise<T> {
       ? ((payload as any).data as T)
       : (payload as T);
 
-  console.log('[http] result:', safeJsonStringify(result));
   return result;
 }
 

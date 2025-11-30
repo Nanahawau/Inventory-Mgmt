@@ -1,28 +1,21 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import Sidebar from '@/components/Sidebar';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { token } = useAuth();
+  const { token, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!token) {
+    if (!loading && !token) {
       router.replace('/');
     }
-  }, [token, router]);
+  }, [loading, token, router]);
 
-  if (!token) return null;
+  if (loading || !token) return null;
 
-  return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-      <main className="flex-1 p-6 bg-slate-50">
-        <div className="max-w-7xl mx-auto">{children}</div>
-      </main>
-    </div>
-  );
+  // Root layout already renders TopNav and <main>; keep this light.   
+  return <div className="mx-auto max-w-7xl px-4 py-6">{children}</div>;
 }

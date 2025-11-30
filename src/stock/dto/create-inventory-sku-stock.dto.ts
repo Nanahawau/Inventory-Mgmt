@@ -11,5 +11,5 @@ export class CreateInventorySkuStockDto {
   @Type(() => Number)
   @IsInt()
   @Min(0)
-  initialStock!: number;
+  stock!: number;
 }

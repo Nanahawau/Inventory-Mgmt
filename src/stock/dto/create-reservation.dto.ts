@@ -13,8 +13,8 @@ export class CreateReservationDto {
   @IsInt()
   inventoryItemId!: number;
 
-  @IsUUID()
-  skuId!: string;
+  @IsInt()
+  skuId!: number;
 
   @Type(() => Number)
   @IsInt()

@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { IsPublic } from 'src/common/decorators/public.decorator';
-import { UserService } from 'src/user/user.service';
+import { IsPublic } from '../common/decorators/public.decorator';
+import { UserService } from '../user/user.service';
 import { LoginDto } from './dto/login.dto';
 
 @Controller('auth')

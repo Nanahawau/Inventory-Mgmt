@@ -1,15 +1,12 @@
-import { IsString, IsOptional } from "class-validator";
+import { IsString, IsBoolean } from "class-validator";
 
-/**
- * CreateStoreDto
- * - name is required
- * - location optional
- */
 export class CreateStoreDto {
+  @IsBoolean()
+  isCentral: boolean;
+
   @IsString()
   name!: string;
 
-  @IsOptional()
   @IsString()
   location?: string;
 }

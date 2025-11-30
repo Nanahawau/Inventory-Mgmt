@@ -1,4 +1,4 @@
-import { IsInt, IsOptional, IsArray, ValidateNested } from "class-validator";
+import { IsInt, IsOptional, IsArray, ValidateNested, IsBoolean } from "class-validator";
 import { Type } from "class-transformer";
 import { CreateInventorySkuStockDto } from "./create-inventory-sku-stock.dto";
 
@@ -10,14 +10,17 @@ import { CreateInventorySkuStockDto } from "./create-inventory-sku-stock.dto";
  */
 export class CreateInventoryDto {
   @IsInt()
-  storeId!: string;
+  storeId!: number;
 
   @IsInt()
-  productId!: string;
+  productId!: number;
+
+  @IsBoolean()
+  isCentral?: boolean;
 
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateInventorySkuStockDto)
-  initialSkuStocks?: CreateInventorySkuStockDto[];
+  skuStocks?: CreateInventorySkuStockDto[];
 }

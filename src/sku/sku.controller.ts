@@ -1,34 +1,26 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { SkuService } from './sku.service';
-import { CreateSkuDto } from './dto/create-sku.dto';
-import { UpdateSkuDto } from './dto/update-sku.dto';
 
 @Controller('sku')
 export class SkuController {
   constructor(private readonly skuService: SkuService) {}
 
-  @Post()
-  create(@Body() createSkuDto: CreateSkuDto) {
-    return this.skuService.create(createSkuDto);
-  }
-
-  @Get()
-  findAll() {
-    return this.skuService.findAll();
+  @Get('')
+  findAll(@Query('productId') productId?: string, @Query('page') page = '1', @Query('pageSize') pageSize = '20', @Query('search') search = '') {
+    // When productId provided, route to filtered list
+    if (productId) {
+      return this.skuService.findByProduct({
+        productId: Number(productId),
+        page: Number(page),
+        pageSize: Number(pageSize),
+        search,
+      });
+    }
+    return this.skuService.findAll({ page: Number(page), pageSize: Number(pageSize), search });
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.skuService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateSkuDto: UpdateSkuDto) {
-    return this.skuService.update(+id, updateSkuDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.skuService.remove(+id);
   }
 }

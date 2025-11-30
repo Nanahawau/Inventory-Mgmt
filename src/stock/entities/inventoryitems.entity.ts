@@ -1,6 +1,6 @@
-import { Product } from "src/product/entities/product.entity";
-import { SkuStock } from "src/stock/entities/skustock.entity";
-import { Store } from "src/store/entities/store.entity";
+import { Product } from "../../product/entities/product.entity";
+import { SkuStock } from "../../stock/entities/skustock.entity";
+import { Store } from "../../store/entities/store.entity";
 import {
   Entity,
   PrimaryGeneratedColumn,
