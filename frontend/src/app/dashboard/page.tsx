@@ -42,6 +42,7 @@ export default function DashboardPage() {
         // 4. Low stock SKUs (stock < 5)
         let lowStock = 0;
         // Central
+        const centralRes = await api.stores.getCentral();
         const centralInvRes = await api.stock.listInventory({ page: 1, pageSize: 100, storeId: centralRes?.id });
         if (Array.isArray(centralInvRes?.data)) {
           centralInvRes.data.forEach((item: InventoryItem) => {
@@ -50,9 +51,10 @@ export default function DashboardPage() {
             }
           });
         }
+
+        const branchesListRes = await api.stores.getBranchStores();
         // Branches
-        if (branchTotal > 0) {
-          const branchesListRes = await api.stores.listBranches({ page: 1, pageSize: branchTotal });
+        if (branchesListRes.data.length > 0) {
           const branchList: Branch[] = Array.isArray(branchesListRes?.data) ? branchesListRes.data : [];
           for (const branch of branchList) {
             const branchInvRes = await api.stock.listInventory({ page: 1, pageSize: 100, storeId: branch.id });
