@@ -69,7 +69,6 @@ export class StockService {
           if (!skuId) throw new BadRequestException("invalid skuId in skuStocks");
           if (isNaN(addStock) || addStock < 0) throw new BadRequestException("invalid stock amount in skuStocks");
 
-          // lock existing row (if present)
           let ss = await manager.getRepository(SkuStock).findOne({
             where: { inventoryItem: { id: inv.id }, sku: { id: skuId } }
           });

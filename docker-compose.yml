@@ -2,65 +2,60 @@ services:
   db:
     image: postgres:16
     container_name: inventory-db
-    env_file:
-      - .env
     environment:
-      POSTGRES_USER: ${DATABASE_USERNAME}
-      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
-      POSTGRES_DB: ${DATABASE_NAME}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: inventory_mgmt
     ports:
       - "5433:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
       - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d inventory_mgmt"]
       interval: 5s
       timeout: 3s
       retries: 10
 
   seed:
-    build: .
+    build: ./server
     container_name: inventory-seed
     depends_on:
       db:
         condition: service_healthy
-    env_file:
-      - .env
     environment:
-      DB_TYPE: ${DATABASE_TYPE}
-      DB_HOST: ${DATABASE_HOST}
-      DB_PORT: ${DATABASE_PORT}
-      DB_USERNAME: ${DATABASE_USERNAME}
-      DB_PASSWORD: ${DATABASE_PASSWORD}
-      DB_NAME: ${DATABASE_NAME}
+      DATABASE_TYPE: postgres
+      DATABASE_HOST: db
+      DATABASE_PORT: 5432
+      DATABASE_USERNAME: postgres
+      DATABASE_PASSWORD: postgres
+      DATABASE_NAME: inventory_mgmt 
     command: ["node", "dist/common/init/seeder.init.js"]
     restart: "no"
 
   api:
-    build: .
+    build: ./server
     container_name: inventory-api
     depends_on:
       db:
         condition: service_healthy
       seed:
         condition: service_completed_successfully
-    env_file:
-      - .env
     environment:
-      DB_TYPE: ${DATABASE_TYPE}
-      DB_HOST: ${DATABASE_HOST}
-      DB_PORT: ${DATABASE_PORT}
-      DB_USERNAME: ${DATABASE_USERNAME}
-      DB_PASSWORD: ${DATABASE_PASSWORD}
-      DB_NAME: ${DATABASE_NAME}
-      JWT_SECRET: ${JWT_SECRET:-changeme}
-      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1h}
+      DATABASE_TYPE: postgres
+      DATABASE_HOST: db
+      DATABASE_PORT: 5432
+      DATABASE_USERNAME: postgres
+      DATABASE_PASSWORD: postgres
+      DATABASE_NAME: inventory_mgmt
+      JWT_SECRET: testsecretkey
+      JWT_EXPIRES_IN: 1h
+      
     ports:
       - "3000:3000"
 
   frontend:
-    build: ./frontend
+    build: ./web
     container_name: inventory-frontend
     depends_on:
       api:

@@ -9,5 +9,5 @@ export default registerAs('databaseConfig', () => ({
   username: process.env.DATABASE_USERNAME,
   password: process.env.DATABASE_PASSWORD,
   database: process.env.DATABASE_NAME,
-  synchronize: process.env.SYNCHRONIZE === 'true',
+  synchronize: true // done, the tables can be created automatically. This will not be done in PROD,
 }));

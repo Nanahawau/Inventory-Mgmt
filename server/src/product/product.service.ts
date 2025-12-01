@@ -68,9 +68,9 @@ export class ProductService {
 
   async findOne(id: number) {
     if (!id) throw new BadRequestException("id required");
-    const p = await this.productRepo.findOne({ where: { id }, relations: ["skus"] });
-    if (!p) throw new NotFoundException("product not found");
-    return p;
+    const product = await this.productRepo.findOne({ where: { id }, relations: ["skus"] });
+    if (!product) throw new NotFoundException("product not found");
+    return product;
   }
 
   async find(query?: ListProductsDto) {
@@ -166,7 +166,6 @@ export class ProductService {
         await trx.delete(Sku, { id: In(product.skus.map((s) => s.id)) });
       }
       await trx.delete(Product, { id: product.id });
-      // Optionally: cascade deletion in stock/inventory if desired via stockService (not implemented here).
     });
 
     return { id, deleted: true };
