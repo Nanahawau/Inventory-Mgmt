@@ -27,8 +27,10 @@ It consists of a **NestJS backend** (TypeScript) and a **Next.js frontend** (Rea
 
 ### Prerequisites
 
+### Note: All environment variables are hardcoded in the docker compose file for test purposes.
+
 - Docker running. 
-Note: All environment variables are hardcoded in the docker compose file for test purposes.
+
 
 ### Steps
 
