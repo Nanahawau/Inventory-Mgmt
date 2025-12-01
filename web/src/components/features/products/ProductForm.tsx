@@ -9,6 +9,36 @@ type FormSku = {
   size?: string;
 };
 
+// eventually configure in db
+const CATEGORY_OPTIONS = [
+  'Electronics',
+  'Apparel',
+  'Home',
+  'Books',
+  'Accessories',
+  'Other'
+];
+// eventually configure in db
+const COLOR_OPTIONS = [
+  'Red',
+  'Blue',
+  'Green',
+  'Black',
+  'White',
+  'Yellow',
+  'Other'
+];
+// eventually configure in db
+const SIZE_OPTIONS = [
+  'XS',
+  'S',
+  'M',
+  'L',
+  'XL',
+  'XXL',
+  'Other'
+];
+
 type Props = {
   initial?: Product;
   onSubmit: (data: {
@@ -89,12 +119,17 @@ export default function ProductForm({ initial, onSubmit, submitting, cancelHref 
       <div className="grid gap-4 md:grid-cols-2">
         <div>
           <label className="block text-sm font-medium mb-1">Category</label>
-          <input
+          <select
             className="w-full rounded border px-3 py-2"
             value={form.category}
             onChange={e => updateField('category', e.target.value)}
             required
-          />
+          >
+            <option value="">Select category</option>
+            {CATEGORY_OPTIONS.map(opt => (
+              <option key={opt} value={opt}>{opt}</option>
+            ))}
+          </select>
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Base Price</label>
@@ -142,21 +177,31 @@ export default function ProductForm({ initial, onSubmit, submitting, cancelHref 
                 </div>
                 <div>
                   <label className="block text-xs font-medium mb-1">Color</label>
-                  <input
+                  <select
                     className="w-full rounded border px-2 py-1.5 text-sm"
                     value={sku.color ?? ''}
                     onChange={e => updateSku(i, { color: e.target.value })}
                     required
-                  />
+                  >
+                    <option value="">Select color</option>
+                    {COLOR_OPTIONS.map(opt => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className="block text-xs font-medium mb-1">Size</label>
-                  <input
+                  <select
                     className="w-full rounded border px-2 py-1.5 text-sm"
                     value={sku.size ?? ''}
                     onChange={e => updateSku(i, { size: e.target.value })}
                     required
-                  />
+                  >
+                    <option value="">Select size</option>
+                    {SIZE_OPTIONS.map(opt => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="flex items-end">
                   <button
