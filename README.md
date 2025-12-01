@@ -5,6 +5,10 @@
 This project is a full-stack inventory management system designed to handle central and branch stores, products, SKUs, inventory, reservations, and stock transfers.  
 It consists of a **NestJS backend** (TypeScript) and a **Next.js frontend** (React + TailwindCSS).
 
+- **Default login for the app:**  
+  - Email: `admin@gmail.com`  
+  - Password: `admin`
+
 ---
 
 ## Tech Stack
@@ -93,9 +97,7 @@ It consists of a **NestJS backend** (TypeScript) and a **Next.js frontend** (Rea
   ```sh
   npm run seed
   ```
-- **Default login for the app:**  
-  - Email: `admin@gmail.com`  
-  - Password: `admin`
+
 - **Authentication:**  
   - The backend API uses JWT for authentication.
 
